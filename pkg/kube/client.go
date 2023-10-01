@@ -772,7 +772,7 @@ func (c *Client) waitForJob(obj runtime.Object, name string) (bool, error) {
 		if c.Type == batch.JobComplete && c.Status == "True" {
 			return true, nil
 		} else if c.Type == batch.JobFailed && c.Status == "True" {
-			return true, errors.Errorf("job failed: %s", c.Reason)
+			return true, errors.Errorf("job %s failed: %s", name, c.Reason)
 		}
 	}
 
@@ -836,13 +836,16 @@ func copyRequestStreamToWriter(request *rest.Request, podName, containerName str
 		return errors.Errorf("Failed to stream pod logs for pod: %s, container: %s", podName, containerName)
 	}
 	defer readCloser.Close()
+
+	fmt.Fprintf(writer, "HOOK LOGS: pod %s, container %s:\n", podName, containerName)
+
 	_, err = io.Copy(writer, readCloser)
 	if err != nil {
 		return errors.Errorf("Failed to copy IO from logs for pod: %s, container: %s", podName, containerName)
 	}
-	if err != nil {
-		return errors.Errorf("Failed to close reader for pod: %s, container: %s", podName, containerName)
-	}
+
+	fmt.Fprintf(writer, "\n")
+
 	return nil
 }
 

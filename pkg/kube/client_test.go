@@ -413,7 +413,7 @@ func TestOutputContainerLogsForPodList(t *testing.T) {
 	err := c.OutputContainerLogsForPodList(&somePodList, namespace, outBuffer)
 	clientAssertions := assert.New(t)
 	clientAssertions.NoError(err)
-	clientAssertions.Equal("fake logsfake logsfake logs", outBuffer.String())
+	clientAssertions.Equal("HOOK LOGS: pod jimmy, container app:v4:\nfake logs\nHOOK LOGS: pod three, container app:v4:\nfake logs\nHOOK LOGS: pod structs, container app:v4:\nfake logs\n", outBuffer.String())
 }
 
 const testServiceManifest = `
