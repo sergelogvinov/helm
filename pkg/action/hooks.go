@@ -179,9 +179,9 @@ func (cfg *Configuration) outputLogsByPolicy(h *release.Hook, releaseNamespace s
 		}
 		switch h.Kind {
 		case "Job":
-			return cfg.outputContainerLogsForListOptions(namespace, metav1.ListOptions{LabelSelector: fmt.Sprintf("job-name=%s", h.Name)})
+			return cfg.outputContainerLogsForListOptions(namespace, h.Name, metav1.ListOptions{LabelSelector: fmt.Sprintf("job-name=%s", h.Name)})
 		case "Pod":
-			return cfg.outputContainerLogsForListOptions(namespace, metav1.ListOptions{FieldSelector: fmt.Sprintf("metadata.name=%s", h.Name)})
+			return cfg.outputContainerLogsForListOptions(namespace, h.Name, metav1.ListOptions{FieldSelector: fmt.Sprintf("metadata.name=%s", h.Name)})
 		default:
 			return nil
 		}
@@ -189,15 +189,21 @@ func (cfg *Configuration) outputLogsByPolicy(h *release.Hook, releaseNamespace s
 	return nil
 }
 
-func (cfg *Configuration) outputContainerLogsForListOptions(namespace string, listOptions metav1.ListOptions) error {
+func (cfg *Configuration) outputContainerLogsForListOptions(namespace string, hookName string, listOptions metav1.ListOptions) error {
 	//TODO Helm 4: Remove this check when GetPodList and OutputContainerLogsForPodList are moved from InterfaceExt to Interface
 	if kubeClient, ok := cfg.KubeClient.(kube.InterfaceExt); ok {
 		podList, err := kubeClient.GetPodList(namespace, listOptions)
 		if err != nil {
 			return err
 		}
-		err = kubeClient.OutputContainerLogsForPodList(podList, namespace, log.Writer())
-		return err
+
+		if len(podList.Items) == 0 {
+			fmt.Fprintf(log.Writer(), "HOOK LOGS: hook %s not found, probably was killed by kubernetes\n\n", hookName)
+
+			return nil
+		}
+
+		return kubeClient.OutputContainerLogsForPodList(podList, namespace, log.Writer())
 	}
 	return nil
 }

@@ -158,10 +158,6 @@ func TestInstallRelease_HooksOutputLogsOnSuccessAndFailure(t *testing.T) {
 }
 
 func runInstallForHooksWithSuccess(t *testing.T, manifest, expectedNamespace string, shouldOutput bool) {
-	var expectedOutput string
-	if shouldOutput {
-		expectedOutput = fmt.Sprintf("attempted to output logs for namespace: %s", expectedNamespace)
-	}
 	is := assert.New(t)
 	instAction := installAction(t)
 	instAction.ReleaseName = "failed-hooks"
@@ -176,15 +172,11 @@ func runInstallForHooksWithSuccess(t *testing.T, manifest, expectedNamespace str
 
 	res, err := instAction.Run(buildChartWithTemplates(templates), vals)
 	is.NoError(err)
-	is.Equal(expectedOutput, outBuffer.String())
+	is.Equal("", outBuffer.String())
 	is.Equal(release.StatusDeployed, res.Info.Status)
 }
 
 func runInstallForHooksWithFailure(t *testing.T, manifest, expectedNamespace string, shouldOutput bool) {
-	var expectedOutput string
-	if shouldOutput {
-		expectedOutput = fmt.Sprintf("attempted to output logs for namespace: %s", expectedNamespace)
-	}
 	is := assert.New(t)
 	instAction := installAction(t)
 	instAction.ReleaseName = "failed-hooks"
@@ -203,6 +195,6 @@ func runInstallForHooksWithFailure(t *testing.T, manifest, expectedNamespace str
 	res, err := instAction.Run(buildChartWithTemplates(templates), vals)
 	is.Error(err)
 	is.Contains(res.Info.Description, "failed pre-install")
-	is.Equal(expectedOutput, outBuffer.String())
+	is.Equal("", outBuffer.String())
 	is.Equal(release.StatusFailed, res.Info.Status)
 }
