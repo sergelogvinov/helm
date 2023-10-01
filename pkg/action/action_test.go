@@ -109,6 +109,14 @@ type chartOptions struct {
 type chartOption func(*chartOptions)
 
 func buildChart(opts ...chartOption) *chart.Chart {
+	defaultTemplates := []*chart.File{
+		{Name: "templates/hello", Data: []byte("hello: world")},
+		{Name: "templates/hooks", Data: []byte(manifestWithHook)},
+	}
+	return buildChartWithTemplates(defaultTemplates, opts...)
+}
+
+func buildChartWithTemplates(templates []*chart.File, opts ...chartOption) *chart.Chart {
 	c := &chartOptions{
 		Chart: &chart.Chart{
 			// TODO: This should be more complete.
@@ -117,18 +125,13 @@ func buildChart(opts ...chartOption) *chart.Chart {
 				Name:       "hello",
 				Version:    "0.1.0",
 			},
-			// This adds a basic template and hooks.
-			Templates: []*chart.File{
-				{Name: "templates/hello", Data: []byte("hello: world")},
-				{Name: "templates/hooks", Data: []byte(manifestWithHook)},
-			},
+			Templates: templates,
 		},
 	}
 
 	for _, opt := range opts {
 		opt(c)
 	}
-
 	return c.Chart
 }
 
